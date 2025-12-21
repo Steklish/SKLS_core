@@ -1,0 +1,153 @@
+Metadata-Version: 2.4
+Name: skls-core
+Version: 0.1.0
+Summary: A comprehensive knowledge graph and language processing system
+Home-page: https://github.com/yourusername/skls_core
+Author: SKLS
+Author-email: SKLS <author@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/skls_core
+Project-URL: Repository, https://github.com/yourusername/skls_core
+Project-URL: Issues, https://github.com/yourusername/skls_core/issues
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=1.10.0
+Requires-Dist: requests>=2.25.0
+Requires-Dist: chromadb>=0.4.0
+Requires-Dist: json_repair>=0.28.0
+Requires-Dist: pyparsing>=3.0.0
+Requires-Dist: tqdm>=4.60.0
+Requires-Dist: python-dotenv>=0.19.0
+Requires-Dist: google-generativeai>=0.3.0
+Requires-Dist: neo4j>=5.0.0
+Requires-Dist: typing-extensions>=4.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov>=2.0; extra == "dev"
+Requires-Dist: black>=21.0; extra == "dev"
+Requires-Dist: flake8>=3.8; extra == "dev"
+Provides-Extra: all
+Requires-Dist: skls-core[dev]; extra == "all"
+Dynamic: author
+Dynamic: home-page
+Dynamic: requires-python
+
+# __SKLS AI CORE__
+_by Anton Kozlov_
+
+## Overview
+
+SKLS AI CORE is a comprehensive knowledge graph and language processing system that provides:
+- Text embedding capabilities with ChromaDB storage
+- LLM-based content generation with Pydantic model support
+- Neo4j graph database management for knowledge graphs
+- Flexible logging configuration
+
+## Installation
+
+### From PyPI (Coming soon)
+```bash
+pip install skls-core
+```
+
+### From Source
+```bash
+git clone <repository-url>
+cd skls_core
+pip install .
+```
+
+### Development Installation
+```bash
+git clone <repository-url>
+cd skls_core
+pip install -e .[dev]
+```
+
+## Dependencies
+
+The package includes the following components:
+- **skls_embeddings**: For creating and managing text embeddings using various backend services and storing them in vector databases
+- **skls_generator**: For generating Pydantic models using LLMs with self-correction capabilities
+- **skls_neo4j**: For managing Neo4j graph databases and creating knowledge graphs
+
+## Usage Example
+
+### Using Embeddings
+```python
+from skls_embeddings import EmbeddingClient, ChromaClient
+
+# Create embedding client
+embed_client = EmbeddingClient(base="http://localhost:8080")
+
+# Create ChromaDB client
+chroma_client = ChromaClient(embed_client)
+
+# Store a text chunk
+chunk_id = chroma_client.store_chunk("Sample text for embedding")
+```
+
+### Using Generator
+```python
+from skls_generator.generator import Generator
+from skls_generator.gen_backends.google_gen import GoogleGenAI
+
+# Create a generator with Google GenAI backend
+gen_ai = GoogleGenAI()
+generator = Generator(client=gen_ai)
+
+# Define your Pydantic model
+from pydantic import BaseModel
+class Person(BaseModel):
+    name: str
+    age: int
+
+# Generate an instance
+person = generator.generate_one_shot(Person, prompt="Generate a person with a random name and age")
+```
+
+### Using Neo4j
+```python
+from skls_neo4j.neo4j_manager import Neo4jGraphManager
+
+# Connect to Neo4j
+manager = Neo4jGraphManager(uri="bolt://localhost:7687", auth=("user", "password"))
+```
+
+## Configuration
+
+The package provides flexible logging configuration:
+```python
+from skls_embeddings import LoggerConfig
+import logging
+
+# Set up custom logging
+LoggerConfig.setup_logging(level=logging.DEBUG)
+
+# Or use a custom logger
+custom_logger = logging.getLogger("my_app")
+LoggerConfig.set_custom_logger(custom_logger)
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests if applicable
+5. Run formatter and linter (`black .` and `flake8 .`)
+6. Commit your changes (`git commit -m 'Add some amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

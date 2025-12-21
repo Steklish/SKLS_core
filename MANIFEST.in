@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include requirements.txt
+include pyproject.toml
+include setup.py
+recursive-include skls_embeddings *.py
+recursive-include skls_generator *.py
+recursive-include skls_neo4j *.py
+recursive-include skls_generator/gen_backends *.py
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
