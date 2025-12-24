@@ -1,86 +1,44 @@
-import logging
-import os
-import sys
-from typing import Optional
+"""
+SKLS Embeddings Package - Logger Configuration
 
-# Global logger configuration
-class LoggerConfig:
-    _configured = False
-    _custom_logger = None
+This module provides centralized logging functionality for all SKLS modules.
+"""
+try:
+    # Try relative import first (when used as part of the package)
+    from ..skls_core.logging import get_skls_logger as get_logger, SKLSLoggerConfig as LoggerConfig
+except (ImportError, ValueError):
+    try:
+        # Fallback to absolute import (when used as standalone package)
+        from skls_core.logging import get_skls_logger as get_logger, SKLSLoggerConfig as LoggerConfig
+    except ImportError:
+        # Final fallback when used as part of larger project
+        # This creates a simple logger when the centralized logging isn't available
+        import logging
 
-    @classmethod
-    def setup_logging(cls, level: int = logging.INFO,
-                     format_string: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                     log_file: Optional[str] = None):
-        """
-        Set up root logging configuration once for the entire application.
+        class FallbackLoggerConfig:
+            @classmethod
+            def set_custom_logger(cls, logger_instance, name=None):
+                pass
 
-        Args:
-            level: Logging level (default: logging.INFO)
-            format_string: Format for log messages
-            log_file: Optional file path to write logs to
-        """
-        if cls._configured:
-            # If already configured, just return the root logger
-            return logging.getLogger()
+            @classmethod
+            def get_custom_logger(cls, name=None):
+                return None
 
-        # Create formatter
-        formatter = logging.Formatter(format_string)
+            @classmethod
+            def reset_custom_logger(cls, name=None):
+                pass
 
-        # Create handler for console output
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(formatter)
+            @classmethod
+            def get_all_custom_loggers(cls):
+                return {}
 
-        # Create root logger
-        root_logger = logging.getLogger()
-        root_logger.setLevel(level)
+        def get_fallback_logger(name, use_custom=True, custom_logger_name=None):
+            return logging.getLogger(name)
 
-        # Clear any existing handlers to avoid duplicates
-        root_logger.handlers.clear()
+        get_logger = get_fallback_logger
+        LoggerConfig = FallbackLoggerConfig
 
-        # Add console handler
-        root_logger.addHandler(console_handler)
-
-        # Add file handler if specified
-        if log_file:
-            # Create log directory if it doesn't exist
-            log_dir = os.path.dirname(log_file)
-            if log_dir and not os.path.exists(log_dir):
-                os.makedirs(log_dir, exist_ok=True)
-
-            file_handler = logging.FileHandler(log_file, encoding='utf-8')
-            file_handler.setFormatter(formatter)
-            root_logger.addHandler(file_handler)
-
-        cls._configured = True
-        return root_logger
-
-    @classmethod
-    def set_custom_logger(cls, logger_instance: logging.Logger):
-        """
-        Allow setting a custom logger instance to be used globally.
-
-        Args:
-            logger_instance: Custom logger instance to use
-        """
-        cls._custom_logger = logger_instance
-
-# Convenience function for getting a named logger
-def get_logger(name: str, use_custom: bool = True) -> logging.Logger:
-    """
-    Get a logger instance with the specified name.
-
-    Args:
-        name: Name of the logger (typically __name__ from the calling module)
-        use_custom: Whether to use custom logger if set
-
-    Returns:
-        Configured logger instance
-    """
-    if use_custom and LoggerConfig._custom_logger is not None:
-        return LoggerConfig._custom_logger
-    return logging.getLogger(name)
-
-# Set up default logging configuration
-os.makedirs('log', exist_ok=True)
-LoggerConfig.setup_logging(log_file='./log/application.log')
+__all__ = [
+    'get_logger',
+    'LoggerConfig'
+]

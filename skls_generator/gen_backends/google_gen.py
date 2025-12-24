@@ -45,7 +45,8 @@ class GoogleGenAI:
                  system_prompt: Optional[str] = None,
                  payload: Any = None,
                  temperature: float = 0.7,
-                 max_tokens: int = 1024) -> str:
+                 max_tokens: int = 1024,
+                 structured: bool = False) -> str:
         """
         Generates a response from the Gemini model.
 
@@ -89,12 +90,16 @@ class GoogleGenAI:
             model_name=self.model_name, # type: ignore
             system_instruction=system_prompt if system_prompt else None
         )
-
+        if structured:
+            response_mime_type="application/json"
+        else:
+            response_mime_type="text/plain"
         generation_config = types.GenerationConfig(
             temperature=temperature,
             max_output_tokens=max_tokens,
             top_p=0.9, # Standard default for Gemini
             top_k=40,
+            response_mime_type=response_mime_type
         )
         
         logger.debug(f"Sending to Gemini ({self.model_name}): {len(contents)} messages")

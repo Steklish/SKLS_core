@@ -2,14 +2,26 @@ import hashlib
 import re
 from typing import Any, List, Optional, Tuple, Dict
 from neo4j import GraphDatabase
-import logging
 
 from .schemas import AIKnowledgeGraph, Article
 
+# Import logger with fallback
+try:
+    # Try relative import first (when used as part of the package)
+    from ..skls_core.logging import get_skls_logger
+except (ImportError, ValueError):
+    try:
+        # Fallback to absolute import (when used as standalone package)
+        from skls_core.logging import get_skls_logger
+    except ImportError:
+        # Final fallback when used as part of larger project
+        import logging
+        get_skls_logger = logging.getLogger
+
 class Neo4jGraphManager:
-    def __init__(self, uri: str, auth: tuple):
+    def __init__(self, uri: str, auth: tuple, logger_instance=None):
         self.driver = GraphDatabase.driver(uri, auth=auth)
-        self.logger = logging.getLogger("Neo4jManager")  
+        self.logger = logger_instance if logger_instance is not None else get_skls_logger(__name__)
         self.create_indexes()
 
     def close(self):
@@ -52,7 +64,7 @@ class Neo4jGraphManager:
     def generate_cypher_queries(
         self,
         article: Article, 
-        graph_data: AIKnowledgeGraph
+        graph_data: AIKnowledgeGraphArticles
     ) -> List[Tuple[str, Dict[str, Any]]]: # type: ignore
         """
         Возвращает список кортежей (Cypher Query, Parameters).

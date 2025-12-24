@@ -1,3 +1,4 @@
+skls_core
 skls_embeddings
 skls_generator
 skls_neo4j

@@ -46,7 +46,8 @@ class Article(BaseModel):
         description="Publication date of the article (YYYY-MM-DD)."
     )
 
-class AIKnowledgeGraph(BaseModel):
+# more like a cluster (multiple instances can be stored iside a single graph(space))
+class AIKnowledgeGraphArticles(BaseModel):
     category: GraphCategory = Field(
         description="Broad domain for filtering."
     )

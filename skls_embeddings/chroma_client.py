@@ -4,26 +4,36 @@ import chromadb
 from chromadb.api.types import QueryResult
 from typing import List, Dict, Any, Optional, Sequence
 from skls_embeddings.embedding_client import EmbeddingClient
-from skls_embeddings.logger_config import get_logger
 
-logger = get_logger(__name__)
+# Import logger with fallback
+try:
+    # Try relative import first (when used as part of the package)
+    from ..skls_core.logging import get_skls_logger
+except (ImportError, ValueError):
+    try:
+        # Fallback to absolute import (when used as standalone package)
+        from skls_core.logging import get_skls_logger
+    except ImportError:
+        # Final fallback when used as part of larger project
+        import logging
+        get_skls_logger = logging.getLogger
 
 
 class ChromaClient:
-    def __init__(self, embedding_client: EmbeddingClient, path: str = os.getenv("CHROMA_PERSIST_DIR", "chroma_db"), collection_name: str = "rag_collection", logger=None):
+    def __init__(self, embedding_client: EmbeddingClient, path: str = os.getenv("CHROMA_PERSIST_DIR", "chroma_db"), collection_name: str = "rag_collection", logger_instance=None):
         """
         Initializes the ChromaClient for persistent storage.
 
         :param embedding_client: An instance of EmbeddingClient.
         :param path: The directory path for ChromaDB's persistent storage.
         :param collection_name: The name of the collection to use.
-        :param logger: Optional custom logger instance. If None, default logger will be used.
+        :param logger_instance: Optional custom logger instance. If None, default logger will be used.
         """
         self.embedding_client = embedding_client
         self.client = chromadb.PersistentClient(path=path)
         self.collection = self.client.get_or_create_collection(name=collection_name)
         self.documents_collection = self.client.get_or_create_collection(name="documents_metadata")
-        self.logger = logger if logger is not None else get_logger(__name__)
+        self.logger = logger_instance if logger_instance is not None else get_skls_logger(__name__)
 
     def store_chunks_with_vectors(self, chunks: List[str], embeddings: Sequence[List[float]], metadatas: Sequence[Dict[str, Any]]) -> List[str]:
         """

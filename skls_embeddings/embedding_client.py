@@ -1,9 +1,19 @@
 import os
 import requests
 from typing import List
-from skls_embeddings.logger_config import get_logger
 
-logger = get_logger(__name__)
+# Import logger with fallback
+try:
+    # Try relative import first (when used as part of the package)
+    from ..skls_core.logging import get_skls_logger
+except (ImportError, ValueError):
+    try:
+        # Fallback to absolute import (when used as standalone package)
+        from skls_core.logging import get_skls_logger
+    except ImportError:
+        # Final fallback when used as part of larger project
+        import logging
+        get_skls_logger = logging.getLogger
 
 class EmbeddingClient:
     def __init__(self, base: str = os.getenv("LLAMACPP_EMBED_BASE","http://localhost:8080"), logger_instance=None):
@@ -14,7 +24,7 @@ class EmbeddingClient:
         :param logger_instance: Optional custom logger instance. If None, default logger will be used.
         """
         self.base = base
-        self.logger = logger_instance if logger_instance is not None else get_logger(__name__)
+        self.logger = logger_instance if logger_instance is not None else get_skls_logger(__name__)
         self.logger.info("Embedding Server instantiated successfully at %s", self.base)
     
     def embed_text(self, text: str) -> List[float]:

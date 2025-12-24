@@ -2,12 +2,14 @@ MANIFEST.in
 README.md
 pyproject.toml
 setup.py
+skls_core/__init__.py
 skls_core.egg-info/PKG-INFO
 skls_core.egg-info/SOURCES.txt
 skls_core.egg-info/dependency_links.txt
 skls_core.egg-info/not-zip-safe
 skls_core.egg-info/requires.txt
 skls_core.egg-info/top_level.txt
+skls_core/logging/__init__.py
 skls_embeddings/__init__.py
 skls_embeddings/chroma_client.py
 skls_embeddings/embedding_client.py
@@ -17,6 +19,7 @@ skls_generator/generator.py
 skls_generator/logger_config.py
 skls_generator/utils.py
 skls_generator/gen_backends/google_gen.py
+skls_generator/gen_backends/llamacpp_gen.py
 skls_neo4j/__init__.py
 skls_neo4j/neo4j_manager.py
 skls_neo4j/schemas.py

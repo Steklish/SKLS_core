@@ -11,11 +11,21 @@ try:
 except ImportError:
     raise ImportError("Please run: pip install json_repair")
 
-# Assuming OpenRouterGenAI is in a file named open_router_gen.py
-from skls_generator.logger_config import get_logger
+# Import logger with fallback
+try:
+    # Try relative import first (when used as part of the package)
+    from ..skls_core.logging import get_skls_logger
+except (ImportError, ValueError):
+    try:
+        # Fallback to absolute import (when used as standalone package)
+        from skls_core.logging import get_skls_logger
+    except ImportError:
+        # Final fallback when used as part of larger project
+        import logging
+        get_skls_logger = logging.getLogger
 
 RETRIES_COUNT = 8
-logger = get_logger(__name__)
+logger = get_skls_logger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -25,11 +35,10 @@ class Generator:
     A class to generate instances of Pydantic models by instructing an LLM.
     """
 
-    def __init__(self, client = None):
-        if client is None:
-            raise ValueError
+    def __init__(self, client, logger_instance=None):
         self.client = client
-        logger.info(f"Generator initialized with model: {self.client.get_model()}")
+        self.logger = logger_instance if logger_instance is not None else get_skls_logger(__name__)
+        self.logger.info(f"Generator initialized with model: {self.client.get_model()}")
 
     def _parse_and_repair_json(self, text_response: str) -> Dict[str, Any]:
         """
@@ -54,9 +63,9 @@ class Generator:
             # 3. Validation: repair_json might return a list if the LLM output a list.
             # If we expect a dict (single object), ensure we got one.
             if isinstance(parsed_json, list) and parsed_json:
-                # Heuristic: If we wanted an object but got a list, 
+                # Heuristic: If we wanted an object but got a list,
                 # maybe the LLM wrapped it in [ ... ]
-                logger.warning("Received a list but expected a Dict. Using first item.")
+                self.logger.warning("Received a list but expected a Dict. Using first item.")
                 return parsed_json[0]
             
             if not isinstance(parsed_json, (dict, list)):
@@ -114,8 +123,8 @@ Instructions:
         history.add("user", initial_user_prompt)
 
         for i in range(retries):
-            logger.info(f"Attempt {i + 1}/{retries} for {pydantic_model.__name__}")
-            
+            self.logger.info(f"Attempt {i + 1}/{retries} for {pydantic_model.__name__}")
+
             try:
                 # Call the API
                 response_text = self.client.complete(
@@ -129,15 +138,15 @@ Instructions:
                 # CHANGED: Use the robust repair method
                 # ---------------------------------------------------
                 parsed_data = self._parse_and_repair_json(response_text)
-                
+
                 # Validation against Pydantic
                 instance = pydantic_model(**parsed_data)
                 return instance
 
             except ValidationError as e:
                 error_msg = f"Schema Validation Failed: {e.errors()}"
-                logger.warning(error_msg)
-                
+                self.logger.warning(error_msg)
+
                 # Reflexion: Tell LLM what went wrong
                 history.add("assistant", response_text) # type: ignore
                 history.add("user", f"JSON valid, but schema invalid: {e}. Fix structure.")
@@ -145,13 +154,13 @@ Instructions:
             except ValueError as e:
                 # This catches the JSON parsing errors from _parse_and_repair_json
                 error_msg = f"JSON Parsing Failed (even after repair): {str(e)}"
-                logger.warning(error_msg)
-                
+                self.logger.warning(error_msg)
+
                 history.add("assistant", response_text) # type: ignore
                 history.add("user", "Output was unreadable JSON. Output ONLY valid JSON.")
 
             except Exception as e:
-                logger.error(f"Unexpected error: {e}")
+                self.logger.error(f"Unexpected error: {e}")
                 time.sleep(1)
 
         raise Exception(f"Failed to generate valid {pydantic_model.__name__} after {retries} attempts.")
